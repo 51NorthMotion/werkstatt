@@ -209,6 +209,11 @@
   font-size: 15px;
 }
 
+.add-button:hover {
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+}
+
 .close-button {
   position: absolute;
   top: 5px;
@@ -217,8 +222,8 @@
 
 .close-button:hover {
   color: red;
-  transform: translateY(-5px) scale(1.02);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
 }
 
 .auto-grid {
@@ -327,6 +332,7 @@
 
 .detail-info {
  display: grid;
+ grid-column: 1;
  grid-template-columns: 1fr 1fr;
  gap: 20px; 
 }
@@ -338,9 +344,34 @@
 }
 
 .detail-aufgaben {
+  grid-column: 2;
+  grid-row: 1 / span 2;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 10px;
+  max-height: 380px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.detail-aufgaben::-webkit-scrollbar {
+  display: none;
+}
+
+.detail-aufgaben > div {
+  display: flex;
+  align-items: center;
   gap: 10px;
+  padding: 12px 15px;
+  border: 1px soliid #444;
+  background: #1d1e24;
+}
+
+.detail-aufgaben h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .detail-view {
@@ -352,6 +383,61 @@
 
 .detail-button {
   position: absolute;
-  top: 1px;
-  left: 15px;
+  top: 0;
+  right: 0;
+  width: 45px;
+  height: 45px;
+  border: none;
+  border-radius: 0 16px 0 12px;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.detail-button:hover {
+  background: #2a2b31;
+  color: white;
+}
+
+.priorität-niedrig {
+  display: inline-block;
+  border: solid 2px green;
+  border-radius: 20px;
+  background: green !important;
+  color: white !important;
+  padding: 10px;
+}
+
+.priorität-mittel {
+  display: inline-block;
+  border: solid 2px yellow;
+  border-radius: 20px;
+  background: yellow !important;
+  color: white !important;
+  padding: 10px;
+}
+
+.priorität-hoch {
+  display: inline-block;
+  border: solid 2px red;
+  border-radius: 20px;
+  background: red !important;
+  color: white !important;
+  padding: 10px;
+}
+
+.detail-view {
+  position: relative;
+  width: 800px;
+  max-width: 90%;
+  min-height: 450px;
+  padding: 30px;
+  background: #15161b;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
 }

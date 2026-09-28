@@ -39,8 +39,14 @@ function App() {
 
     setFehler("");
 
+  setAutoList((alteAutos) => {
+    const neueId =
+      alteAutos.length > 0
+      ? Math.max(...alteAutos.map((auto) => auto.id)) + 1
+      : 1;
+
     const neuesAuto = {
-      id: aufgabenListe.length + 1,
+      id: neueId,
       marke,
       model,
       submodel,
@@ -50,7 +56,8 @@ function App() {
       aufgaben: aufgabenListe
     };
 
-    setAutoList((alteAutos) => [...alteAutos, neuesAuto]);
+    return [...alteAutos, neuesAuto]
+  });
     setPopupOffen(false);
   }
 
@@ -124,75 +131,73 @@ const autoLoeschen = (id) => {
 };
 
 
-  return (
-   <div>
-      <h1>Werkstatt</h1>
+return (
+  <div>
+    <h1>Werkstatt</h1>
 
-      <button onClick={() => setPopupOffen(true)}>Popup öffnen</button>
+    <button onClick={() => setPopupOffen(true)}>Popup öffnen</button>
       
 
-  {popupOffen && (
-    <div className="overlay">
-      <div className="popup">
-        <h2>Auto Hinzufügen</h2>
-          <form> 
-            <input 
-              type="text"
-              placeholder="Marke"
-              value={marke}
-              onChange={(e) => setMarke(e.target.value)}
-            />
+{popupOffen && (
+  <div className="overlay">
+    <div className="popup">
+      <h2>Auto Hinzufügen</h2>
+        <form> 
+          <input 
+            type="text"
+            placeholder="Marke"
+            value={marke}
+            onChange={(e) => setMarke(e.target.value)}/>
 
-            <input 
-              type="text"
-              placeholder="Model"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-            />
+          <input 
+            type="text"
+            placeholder="Model"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}/>
 
-            <input 
-              type="text"
-              placeholder="Submodel"
-              value={submodel}
-              onChange={(e) => setSubmodel(e.target.value)}
-            />
+          <input 
+            type="text"
+            placeholder="Submodel"
+            value={submodel}
+            onChange={(e) => setSubmodel(e.target.value)}/>
 
-            <input 
-              type="text"
-              placeholder="Baujahr"
-              value={baujahr}
-              onChange={(e) => setBaujahr(e.target.value)}
-            />
+          <input 
+            type="text"
+            placeholder="Baujahr"
+            value={baujahr}
+            onChange={(e) => setBaujahr(e.target.value)}/>
 
-            <select
-              value={priorität}
-              onChange={(e) => setPriorität(e.target.value)}
-            >
+          <select
+            value={priorität}
+            onChange={(e) => setPriorität(e.target.value)}>
 
-              <option value="">Priorität auswählen</option>
-              <option value="niedrig">Niedrig</option>
-              <option value="mittel">Mittel</option>
-              <option value="hoch">Hoch</option>
-            </select>
+            <option value="">Priorität auswählen</option>
+            <option value="niedrig">Niedrig</option>
+            <option value="mittel">Mittel</option>
+            <option value="hoch">Hoch</option>
+          </select>
 
-            <input type="text" 
-              placeholder="Neue Aufgabe" 
-              value={neueAufgabe} 
-              onChange={(e) => setNeueAufgabe(e.target.value)} />
-              <button type="button" onClick={aufgabeHinzufügen}>
-              Aufgabe hinzufügen
-              </button>
-          </form>
+          <input type="text" 
+            placeholder="Neue Aufgabe" 
+            value={neueAufgabe} 
+            onChange={(e) => setNeueAufgabe(e.target.value)} />
+          <button type="button" onClick={aufgabeHinzufügen}>
+            Aufgabe hinzufügen
+          </button>
+        </form>
           
-          {fehler && (
-            <div className="fehler-meldung">
+        {fehler && (
+          <div className="fehler-meldung">
             {fehler}
-     </div>
-   )}
+          </div>
+        )}
 
           <button 
            className="add-button"
-           onClick={autoHinzufuegen}>
+           onClick={() => {
+            autoHinzufuegen();
+            popupSchließen();
+           }}>
             Hinzufügen
           </button>
 
@@ -201,82 +206,15 @@ const autoLoeschen = (id) => {
           onClick={popupSchließen}>
             X
           </button>
-      </div>
     </div>
-  )}
-
+  </div>
+)}
+  
   <div className="auto-grid">
 
     {autoList.map((auto) => (
       <div className="auto-item">
-      
-        {ausgewaehlt?.id === auto.id ? (
-
-          <div className="detail-view">
-       
-            <div className="detail-auto">
-                <h2>{ausgewaehltesAuto.marke}</h2>
-                  <h3>
-                    {ausgewaehltesAuto.model} {ausgewaehltesAuto.submodel}
-                  </h3>
-
-                </div>
-
-                <div className="detail-info">
-
-                  <div className="detail-info-item">
-                    <span>Baujahr</span>
-                    <strong>{ausgewaehltesAuto.baujahr}</strong>
-                  </div>
-
-                  <div className="detail-info-item">
-                    <span>Ankunft</span>
-                    <strong>{ausgewaehltesAuto.ankunft}</strong>
-                  </div>
-
-                  <div className="detail-info-item">
-                    <span>Priorität</span>
-                    <strong>{ausgewaehltesAuto.priorität}</strong>
-                  </div>
-
-                  <div className="detail-info-item">
-                    <span>Aufgaben</span>
-                    <strong>
-                    {auto.aufgaben.filter((aufgabe) => aufgabe.fertig).length} von {auto.aufgaben.length}
-                    </strong>
-                  </div>
-              </div>
-
-              <div className="detail-aufgaben">
-
-                {ausgewaehltesAuto.aufgaben.map((aufgabe) => (
-                  <div key={aufgabe.id}>
-
-                    <h3>{aufgabe.title}</h3>
-
-                      <input
-                        type='checkbox' 
-                        checked={aufgabe.fertig}
-                        onChange={() => {
-                        aufgabeUmschalten(aufgabe)
-                       }}
-                      />
-
-                  </div>
-
-                ))}
-<button className="detail-button"
-onClick={detailsSchliessen}
->
-  X
-</button>
-              </div>
-
-            </div>
-
             
-            ) : (
-
           <div className="auto-card"
           onClick={() => {
             console.log("Karte geklickt:, auto");
@@ -322,16 +260,80 @@ onClick={detailsSchliessen}
               Löschen
               </button>
             </div>
-
-            )}
           </div>
     ))}
   </div>
 
+      {ausgewaehlt && (
 
-</div>
+        <div className="overlay">
+
+          <div className="detail-view">
+       
+            <div className="detail-auto">
+                <h2>{ausgewaehltesAuto.marke}</h2>
+                  <h3>
+                    {ausgewaehltesAuto.model} {ausgewaehltesAuto.submodel}
+                  </h3>
+
+                </div>
+
+                <div className="detail-info">
+
+                  <div className="detail-info-item">
+                    <span>Baujahr</span>
+                    <strong>{ausgewaehltesAuto.baujahr}</strong>
+                  </div>
+
+                  <div className="detail-info-item">
+                    <span>Ankunft</span>
+                    <strong>{ausgewaehltesAuto.ankunft}</strong> 
+                  </div>
+
+                  <div className="detail-info-item">
+                    <span>Priorität</span>
+                    <strong className={`priorität-${ausgewaehltesAuto.priorität}`}>
+                      {ausgewaehltesAuto.priorität}
+                     </strong>
+                  </div>
+
+                  <div className="detail-info-item">
+                    <span>Aufgaben</span>
+                    <strong>
+                    {ausgewaehltesAuto.aufgaben.filter((aufgabe) => aufgabe.fertig).length} von {ausgewaehltesAuto.aufgaben.length}
+                    </strong>
+                  </div>
+            </div>
+
+              <div className="detail-aufgaben">
+
+                {ausgewaehltesAuto.aufgaben.map((aufgabe) => (
+                  <div key={aufgabe.id}>
+
+                    <input 
+                      type='checkbox' 
+                      checked={aufgabe.fertig}
+                      onChange={() => {
+                      aufgabeUmschalten(aufgabe)
+                      }}
+                    />
+                    <h3>{aufgabe.title}</h3>
+                  </div>
+        
+      ))}
+
+        </div>
+<button className="detail-button"
+onClick={detailsSchliessen}
+>
+  X
+</button>
+              </div>
+
+            </div>
+      )}
+          </div>
   );
 }
-
 
 export default App 
