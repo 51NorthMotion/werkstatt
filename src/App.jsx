@@ -1,22 +1,44 @@
 import { useState, useEffect } from 'react';
-import { autos } from './data.js';
 import './App.css';
 
 function App() {
   
 
+// useStates für funktionen
 
   const [marke, setMarke] = useState("");
   const [model, setModel] = useState("");
   const [submodel, setSubmodel] = useState("");
   const [baujahr, setBaujahr] = useState("");
-  const [priorität, setPriorität] = useState("");
+  const [prioritaet, setPrioritaet] = useState("");
   const [popupOffen, setPopupOffen] = useState(false);
   const [ausgewaehlt, setAusgewaehlt] = useState(null);
   const [neueAufgabe, setNeueAufgabe] = useState("");
   const [aufgabenListe, setAufgabenListe] = useState([]);
   const [fehler, setFehler] = useState("");
+  const [autoList, setAutoList] = useState([]);
+  const [bearbeiten, setBearbeiten] = useState(false);
 
+//useStates zum bearbeiten der Fahrzeugdaten
+const [bearbeitenMarke, setBearbeitenMarke] = useState("");
+const [bearbeitenModel, setBearbeitenModel] = useState("");
+const [bearbeitenSubmodel, setBearbeitenSubmodel] = useState("");
+const [bearbeitenBaujahr, setBearbeitenBaujahr] = useState("");
+const [bearbeitenPrioritaet, setBearbeitenPrioritaet] = useState("");
+const [bearbeitenAufgaben, setBearbeitenAufgaben] = useState([]);
+const [bearbeitenNeueAufgabe, setBearbeitenNeueAufgabe] = useState("");
+
+//Laden der datem auf der API
+  useEffect(() => {
+    fetch("http://localhost:3000/api/autos")
+    .then((response) => response.json())
+    .then((daten) => {
+
+      setAutoList(daten);
+    });
+  }, []);
+
+//Aufgaben für autos hinzufügen
   const aufgabeHinzufügen = () => {
     const neueAufgabenDaten = {
       id: Date.now(),
@@ -28,22 +50,21 @@ function App() {
     setNeueAufgabe("");
     };
   
-      // autos hinzufügen
+//autos hinzufügen wenn alle felder ausgefüllt wurden
+  const autoHinzufuegen = async () => {
 
-  const autoHinzufuegen = () => {
-
-    if(!marke || !model || !submodel || !baujahr || !priorität) {
+    if(!marke || !model || !submodel || !baujahr || !prioritaet) {
       setFehler("Bitte alle Felder asufüllen.");
       return;
     }
 
     setFehler("");
 
-  setAutoList((alteAutos) => {
-    const neueId =
-      alteAutos.length > 0
-      ? Math.max(...alteAutos.map((auto) => auto.id)) + 1
-      : 1;
+// ID zuweisen, daten erstellen und Pushen   
+    const neueId = 
+    autoList.length > 0
+    ? Math.max(...autoList.map((auto) => auto.id)) + 1
+    : 1
 
     const neuesAuto = {
       id: neueId,
@@ -52,37 +73,39 @@ function App() {
       submodel,
       baujahr,
       ankunft: new Date().toLocaleDateString(),
-      priorität,
+      prioritaet,
       aufgaben: aufgabenListe
     };
 
-    return [...alteAutos, neuesAuto]
+    const response = await fetch("http://localhost:3000/api/autos", {
+      method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(neuesAuto)
   });
+
+  const gespeichertesAuto = await response.json();
+
+  setAutoList((alteAutos) => [...alteAutos, gespeichertesAuto]);
+
     setPopupOffen(false);
   }
 
-  const [autoList, setAutoList] = useState(() => {
-  const gespeicherteAutos = localStorage.getItem("werkstattAutos");
 
-    if (gespeicherteAutos) {
-      return JSON.parse(gespeicherteAutos);
-    }
-
-    return autos;
-  });
 
   const ausgewaehltesAuto = autoList.find(
     (auto) => auto.id === ausgewaehlt?.id
   );
 
-
+// Input felder leeren nach Hinzufügen oder schließen des Popups
   const popupSchließen = () => {
     setPopupOffen(false);
     setMarke("");
     setModel("");
     setSubmodel("");
     setBaujahr("");
-    setPriorität("");
+    setPrioritaet("");
     setNeueAufgabe("");
     setAufgabenListe([]);
   };
@@ -91,28 +114,25 @@ function App() {
   setAusgewaehlt(null);
 };
 
+//Aufgaben als fertig markieren
+const aufgabeUmschalten = async (aufgabe) => {
+  const aktualisiertesAuto = {
+    ...ausgewaehltesAuto,
 
-  const aufgabeUmschalten = (aufgabe) => {
-    setAutoList((alteAutos) => {
-      return alteAutos.map((auto) => {
-        if (auto.id === ausgewaehltesAuto.id) {
-          return {
-            ...auto,
-            aufgaben: auto.aufgaben.map((a) => {
-              if (a.id === aufgabe.id) {
-                return {
-                  ...a,
-                  fertig: !a.fertig
-                };
-              }
-              return a;
-            })
-          };
-        }
-        return auto;
-      })
+    aufgaben: ausgewaehltesAuto.aufgaben.map((a) => {
+      if (a.id === aufgabe.id) {
+        return {
+          ...a,
+          fertig: !a.fertig
+        };
+      }
+
+      return a;
     })
-  }
+  };
+
+  await autoAktualisieren(aktualisiertesAuto);
+};
 
 
 // useEffect zum speichern wenn Autos sich ändert
@@ -121,23 +141,89 @@ useEffect(() => {
     localStorage.setItem("werkstattAutos", JSON.stringify(autoList));
 }, [autoList]);
 
-// popup öffnen und schließen + details anzeigen und aufgabe hinzufügen
-console.log(autoList);
+//Auto aus liste entfernen + API eintrag löschen
+const autoLoeschen = async (id) => {
+  const response = await fetch(`http://localhost:3000/api/autos/${id}`, {
+    method: "DELETE"
+  });
 
-const autoLoeschen = (id) => {
+  if (!response.ok) {
+    console.error("Auto konnte nicht gelöscht werden.");
+    return;
+  }
+
   setAutoList((alteAutos) => {
     return alteAutos.filter((auto) => auto.id !== id);
   });
 };
 
+//auto aktualisieren
+const autoAktualisieren = async (aktualisiertesAuto) => {
+  const response = await fetch(`http://localhost:3000/api/autos/${aktualisiertesAuto.id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(aktualisiertesAuto)
+    }
+  );
 
+  if (!response.ok) {
+    console.error("Auto konnte nicht aktualisiert werden.");
+    return null;
+  }
+
+  const gespeichertesAuto = await response.json();
+
+  setAutoList((alteAutos) => {
+    return alteAutos.map((auto) =>
+    auto.id === gespeichertesAuto.id 
+    ? gespeichertesAuto
+    : auto
+  );
+  });
+
+  setAusgewaehlt(gespeichertesAuto);
+
+  return gespeichertesAuto;
+}
+
+//aufgaben löschen
+const bearbeitungsAufgabeLoeschen = (id) => {
+  setBearbeitenAufgaben((alteAufgaben) => {
+    return alteAufgaben.filter((aufgabe) => aufgabe.id !== id);
+  });
+};
+
+//Aufgaben bearbeiten
+const bearbeitungsAufgabeHinzufuegen = () => {
+  if (!bearbeitenNeueAufgabe.trim()) {
+    return;
+  }
+
+  const neueAufgabe = {
+    id: Date.now(),
+    title: bearbeitenNeueAufgabe,
+    fertig: false
+  };
+
+  setBearbeitenAufgaben((alteAufgaben) => [
+    ...alteAufgaben,
+    neueAufgabe
+  ]);
+
+  setBearbeitenNeueAufgabe("");
+};
+
+//Grundlegender aufbau der seite
 return (
   <div>
     <h1>Werkstatt</h1>
 
     <button onClick={() => setPopupOffen(true)}>Popup öffnen</button>
       
-
+{/* // Popup zum hinzufügen von autos und aufgaben */}
 {popupOffen && (
   <div className="overlay">
     <div className="popup">
@@ -168,8 +254,8 @@ return (
             onChange={(e) => setBaujahr(e.target.value)}/>
 
           <select
-            value={priorität}
-            onChange={(e) => setPriorität(e.target.value)}>
+            value={prioritaet}
+            onChange={(e) => setPrioritaet(e.target.value)}>
 
             <option value="">Priorität auswählen</option>
             <option value="niedrig">Niedrig</option>
@@ -177,21 +263,29 @@ return (
             <option value="hoch">Hoch</option>
           </select>
 
-          <input type="text" 
+        <div className="aufgaben-eingabe">
+          <input 
+            type="text" 
             placeholder="Neue Aufgabe" 
             value={neueAufgabe} 
             onChange={(e) => setNeueAufgabe(e.target.value)} />
-          <button type="button" onClick={aufgabeHinzufügen}>
+
+          <button 
+            type="button" 
+            onClick={aufgabeHinzufügen}>
             Aufgabe hinzufügen
           </button>
+        </div>
         </form>
           
+
+{/* //Meldung bei nicht ausgefüllten Input feldern */}
         {fehler && (
           <div className="fehler-meldung">
             {fehler}
           </div>
         )}
-
+{/* //hinzufügen und abbrechen des vorgangs */}
           <button 
            className="add-button"
            onClick={() => {
@@ -210,6 +304,7 @@ return (
   </div>
 )}
   
+{/* //standart ansicht */}
   <div className="auto-grid">
 
     {autoList.map((auto) => (
@@ -240,7 +335,7 @@ return (
 
               <div className="auto-info-item">
                 <span>Priorität</span>
-                <strong>{auto.priorität}</strong>
+                <strong>{auto.prioritaet}</strong>
               </div>
 
               <div className="auto-info-item">
@@ -264,6 +359,7 @@ return (
     ))}
   </div>
 
+{/* //detail ansicht */}
       {ausgewaehlt && (
 
         <div className="overlay">
@@ -292,8 +388,8 @@ return (
 
                   <div className="detail-info-item">
                     <span>Priorität</span>
-                    <strong className={`priorität-${ausgewaehltesAuto.priorität}`}>
-                      {ausgewaehltesAuto.priorität}
+                    <strong className={`prioritaet-${ausgewaehltesAuto.prioritaet}`}>
+                      {ausgewaehltesAuto.prioritaet}
                      </strong>
                   </div>
 
@@ -304,6 +400,8 @@ return (
                     </strong>
                   </div>
             </div>
+
+{/* Aufgaben als erledigt makieren */}
 
               <div className="detail-aufgaben">
 
@@ -323,11 +421,152 @@ return (
       ))}
 
         </div>
-<button className="detail-button"
-onClick={detailsSchliessen}
+
+{/* Schhließen der detail ansicht */}
+
+  <button className="detail-button"
+  onClick={detailsSchliessen}
+  >
+  X
+  </button>
+
+{/* button zum bearbeiten der details */}
+
+  <button className="bearbeiten-button"
+  onClick={() => {
+    setBearbeitenMarke(ausgewaehlt.marke);
+    setBearbeitenModel(ausgewaehlt.model);
+    setBearbeitenSubmodel(ausgewaehlt.submodel);
+    setBearbeitenPrioritaet(ausgewaehlt.pioritaet);
+    setBearbeitenAufgaben(ausgewaehlt.aufgaben);
+    setBearbeitenBaujahr(ausgewaehlt.baujahr);
+    setBearbeitenPrioritaet(ausgewaehltesAuto.prioritaet);
+
+    setBearbeiten(true)
+  }}
+  >
+    bearbeiten
+  </button>
+
+
+{/* Bearbeitungs popup */}
+{bearbeiten&& (
+  <div className="overlay">
+    <div className="bearbeiten-popup">
+      <h2>Fahrzeug bearbeiten</h2>
+
+      <input
+        type="text"
+        value={bearbeitenMarke}
+        onChange={(e) => setBearbeitenMarke(e.target.value)}
+        placeholder="Marke"
+      />
+
+      <input
+        type="text"
+        value={bearbeitenModel}
+        onChange={(e) => setBearbeitenModel(e.target.value)}
+        placeholder="Modell"
+      />
+
+      <input
+        type="text"
+        value={bearbeitenSubmodel}
+        onChange={(e) => setBearbeitenSubmodel(e.target.value)}
+        placeholder="Submodell"
+      />
+
+      <input
+        type="number"
+        value={bearbeitenBaujahr}
+        onChange={(e) => setBearbeitenBaujahr(e.target.value)}
+        placeholder="Baujahr"
+      />
+
+      <select
+        value={bearbeitenPrioritaet}
+        onChange={(e) => setBearbeitenPrioritaet(e.target.value)}
+      >
+        <option value="">Priorität auswählen</option>
+        <option value="niedrig">Niedrig</option>
+        <option value="mittel">Mittel</option>
+        <option value="hoch">Hoch</option>
+      </select>
+
+      <h3>Aufgaben</h3>
+
+<div className="bearbeiten-aufgaben">
+  {bearbeitenAufgaben.map((aufgabe) => (
+    <div
+      key={aufgabe.id}
+      className="bearbeiten-aufgabe"
+    >
+      <input
+        type="checkbox"
+        checked={aufgabe.fertig}
+        onChange={() => {}}
+      />
+
+      <span>{aufgabe.title}</span>
+
+        <button
+          type="button"
+          className="aufgabe-loeschen"
+          onClick={() => bearbeitungsAufgabeLoeschen(aufgabe.id)}
+          >
+          Löschen
+        </button>
+    </div>
+  ))}
+</div>
+
+<div className="bearbeiten-aufgaben-eingabe">
+  <input
+    type="text"
+    value={bearbeitenNeueAufgabe}
+    onChange={(e) => setBearbeitenNeueAufgabe(e.target.value)}
+    placeholder="Neue Aufgabe"
+  />
+
+    <button
+      type="button"
+      onClick={bearbeitungsAufgabeHinzufuegen}
+      >
+      Aufgabe hinzufügen
+    </button>
+</div>
+
+      <button
+        type="button"
+        className="speichern-button"
+        onClick={async () => {
+          const aktualisiertesAuto = {
+            ...ausgewaehlt,
+            marke: bearbeitenMarke,
+            model: bearbeitenModel,
+            submodel: bearbeitenSubmodel,
+            baujahr: bearbeitenBaujahr,
+            prioritaet: bearbeitenPrioritaet,
+            aufgaben: bearbeitenAufgaben
+          };
+
+          await autoAktualisieren(aktualisiertesAuto);
+
+          setBearbeiten(false);
+        }}
+      >
+        Speichern
+      </button>
+
+      <button
+  className="close-button"
+  onClick={() => setBearbeiten(false)}
 >
   X
 </button>
+    </div>
+  </div>
+)}
               </div>
 
             </div>
@@ -335,5 +574,5 @@ onClick={detailsSchliessen}
           </div>
   );
 }
-
+                      
 export default App 
