@@ -14,10 +14,10 @@ function App() {
   const [popupOffen, setPopupOffen] = useState(false);
   const [ausgewaehlt, setAusgewaehlt] = useState(null);
   const [neueAufgabe, setNeueAufgabe] = useState("");
-  const [aufgabenListe, setAufgabenListe] = useState([]);
   const [fehler, setFehler] = useState("");
   const [autoList, setAutoList] = useState([]);
   const [bearbeiten, setBearbeiten] = useState(false);
+  const [neueAufgaben, setNeueAufgaben] = useState([]);
 
 //useStates zum bearbeiten der Fahrzeugdaten
 const [bearbeitenMarke, setBearbeitenMarke] = useState("");
@@ -39,16 +39,23 @@ const [bearbeitenNeueAufgabe, setBearbeitenNeueAufgabe] = useState("");
   }, []);
 
 //Aufgaben für autos hinzufügen
-  const aufgabeHinzufügen = () => {
-    const neueAufgabenDaten = {
-      id: Date.now(),
-      title: neueAufgabe,
-      fertig: false
-    };
+const aufgabeHinzufuegen = () => {
+  if (!neueAufgabe.trim()) {
+    return;
+  }
 
-    setAufgabenListe([...aufgabenListe, neueAufgabenDaten]);
-    setNeueAufgabe("");
-    };
+  const aufgabe = {
+    title: neueAufgabe,
+    fertig: false
+  };
+
+  setNeueAufgaben((alteAufgaben) => [
+    ...alteAufgaben,
+    aufgabe
+  ]);
+
+  setNeueAufgabe("");
+};
   
 //autos hinzufügen wenn alle felder ausgefüllt wurden
   const autoHinzufuegen = async () => {
@@ -61,20 +68,14 @@ const [bearbeitenNeueAufgabe, setBearbeitenNeueAufgabe] = useState("");
     setFehler("");
 
 // ID zuweisen, daten erstellen und Pushen   
-    const neueId = 
-    autoList.length > 0
-    ? Math.max(...autoList.map((auto) => auto.id)) + 1
-    : 1
-
     const neuesAuto = {
-      id: neueId,
       marke,
       model,
       submodel,
       baujahr,
       ankunft: new Date().toLocaleDateString(),
       prioritaet,
-      aufgaben: aufgabenListe
+      aufgaben: neueAufgaben
     };
 
     const response = await fetch("http://localhost:3000/api/autos", {
@@ -86,6 +87,8 @@ const [bearbeitenNeueAufgabe, setBearbeitenNeueAufgabe] = useState("");
   });
 
   const gespeichertesAuto = await response.json();
+
+  console.log("Gespeichertes Auto vom Server:", gespeichertesAuto);
 
   setAutoList((alteAutos) => [...alteAutos, gespeichertesAuto]);
 
@@ -107,7 +110,6 @@ const [bearbeitenNeueAufgabe, setBearbeitenNeueAufgabe] = useState("");
     setBaujahr("");
     setPrioritaet("");
     setNeueAufgabe("");
-    setAufgabenListe([]);
   };
 
   const detailsSchliessen = () => {
@@ -143,6 +145,8 @@ useEffect(() => {
 
 //Auto aus liste entfernen + API eintrag löschen
 const autoLoeschen = async (id) => {
+
+  console.log("Lösche Auto mit ID:", id);
   const response = await fetch(`http://localhost:3000/api/autos/${id}`, {
     method: "DELETE"
   });
@@ -203,7 +207,6 @@ const bearbeitungsAufgabeHinzufuegen = () => {
   }
 
   const neueAufgabe = {
-    id: Date.now(),
     title: bearbeitenNeueAufgabe,
     fertig: false
   };
@@ -264,6 +267,7 @@ return (
           </select>
 
         <div className="aufgaben-eingabe">
+
           <input 
             type="text" 
             placeholder="Neue Aufgabe" 
@@ -272,7 +276,7 @@ return (
 
           <button 
             type="button" 
-            onClick={aufgabeHinzufügen}>
+            onClick={aufgabeHinzufuegen}>
             Aufgabe hinzufügen
           </button>
         </div>
@@ -504,7 +508,15 @@ return (
       <input
         type="checkbox"
         checked={aufgabe.fertig}
-        onChange={() => {}}
+        onChange={() => {
+        setBearbeitenAufgaben((alteAufgaben) =>
+        alteAufgaben.map((a) =>
+        a.id === aufgabe.id
+        ? { ...a, fertig: !a.fertig }
+        : a
+      )
+    );
+  }}
       />
 
       <span>{aufgabe.title}</span>
@@ -550,9 +562,16 @@ return (
             aufgaben: bearbeitenAufgaben
           };
 
-          await autoAktualisieren(aktualisiertesAuto);
+console.log("Vor autoAktualisieren");
+console.log("Aufgaben beim Speichern:", bearbeitenAufgaben);
 
-          setBearbeiten(false);
+await autoAktualisieren(aktualisiertesAuto);
+
+console.log("Nach autoAktualisieren");
+
+setBearbeiten(false);
+
+console.log("Bearbeiten sollte jetzt geschlossen sein");
         }}
       >
         Speichern
