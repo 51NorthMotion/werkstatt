@@ -1,16 +1,32 @@
-# React + Vite
+# Werkstattverwaltung
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Eine React-Webanwendung zur Verwaltung von Fahrzeugen und Werkstattaufgaben.
 
-Currently, two official plugins are available:
+## Funktionen
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 🚗 Fahrzeugverwaltung
+- Fahrzeuge hinzufügen und entfernen
+- Fahrzeugdaten bearbeiten
+- Vorhandene Fahrzeuge übersichtlich anzeigen
 
-## React Compiler
+### 🔧 Aufgabenverwaltung
+- Aufgaben Fahrzeugen zuweisen
+- Aufgaben bearbeiten und entfernen
+- Aufgaben als erledigt markieren
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 💾 Datenverwaltung
+- Speicherung der Daten in einer SQL-Datenbank
+- Kommunikation zwischen Frontend und Backend über eine API
 
-## Expanding the ESLint configuration
+## Technologien
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React
+- JavaScript
+- Node.js
+- Express.js
+- SQL
+- Vite
+
+## Projektstatus
+
+Das Projekt befindet sich aktuell in aktiver Entwicklung. Weitere Funktionen und Verbesserungen werden schrittweise ergänzt.
