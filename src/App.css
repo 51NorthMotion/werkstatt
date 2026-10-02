@@ -606,3 +606,133 @@
 .bearbeiten-aufgaben::-webkit-scrollbar-thumb:hover {
   background: #777;
 }
+
+.login-seite {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #292b36;
+}
+
+.login-box {
+    width: 380px;
+    padding: 40px;
+    box-sizing: border-box;
+
+    background-color: #1d1e24;
+
+    border-radius: 8px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.login-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #000b6b;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.login-box input {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 12px 14px;
+
+    background-color: #15171d;
+    color: #f1f1f1;
+
+    border: 1px solid #3a3e4a;
+    border-radius: 6px;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-box input::placeholder {
+    color: #858b98;
+}
+
+.login-box input:focus {
+    border-color: #3548e0;
+
+    box-shadow: 0 0 0 2px rgba(53, 72, 224, 0.2);
+}
+
+.login-box form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.login-box form button {
+    width: 100%;
+
+    padding: 12px;
+
+    background-color: #2939c7;
+    color: white;
+
+    border: none;
+    border-radius: 6px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.login-box form button:hover {
+    background-color: #3548e0;
+}
+
+.mitarbeiter-login {
+    padding: 9px 16px;
+
+    background-color: transparent;
+    color: #aeb4c0;
+
+    border: 1px solid #3a3e4a;
+    border-radius: 6px;
+
+    font-size: 13px;
+
+    cursor: pointer;
+
+    transition: all 0.2s;
+}
+
+.mitarbeiter-login:hover {
+  color: #f1f1f1;
+  border-color: #3548e0;
+  background-color: rgba(53, 72, 224, 0.1);
+}
+
+
+
+
+/*
+#282b36   Seitenhintergrund
+#1d1e24   Login-Box
+#15171d   Input-Hintergrund
+#3a3e4a   Input-Rand
+#f1f1f1   Haupttext 
+#aeb4c0   Sekundärtext
+#2939c7   Hauptbutton
+#3548e0    Hover 
+
+Palette unbedingt umsetzen!!!!*/

@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import db from "./database.js";
-
+import bcrypt from "bcrypt";
 
 // Express-Anwendung erstellen
 const app = express();
@@ -12,6 +12,146 @@ app.use(express.json());
 
 const PORT = 3000;
 
+// Benutzer erstellen
+async function benutzerErstellen(
+  name,
+  email,
+  passwort,
+  role = "kunde"
+) {
+  const passwortHash = await bcrypt.hash(passwort, 10);
+
+  const result = db.prepare(`
+    INSERT INTO benutzer (
+      name,
+      email,
+      passwort_hash,
+      role
+    )
+    VALUES (?, ?, ?, ?)
+  `).run(
+    name,
+    email,
+    passwortHash,
+    role
+  );
+
+  return result.lastInsertRowid;
+}
+
+// Erstellt einen neuen Kunden
+app.post("/api/benutzer", async (req, res) => {
+  try {
+    const { name, email, passwort } = req.body;
+
+    // Pflichtfelder prüfen
+    if (!name || !email || !passwort) {
+      return res.status(400).json({
+        error: "Name, E-Mail und Passwort sind erforderlich."
+      });
+    }
+
+    // E-Mail-Format prüfen
+    if (!email.includes("@")) {
+      return res.status(400).json({
+        error: "Bitte eine gültige E-Mail-Adresse eingeben."
+      });
+    }
+
+    // Passwortlänge prüfen
+    if (passwort.length < 8) {
+      return res.status(400).json({
+        error: "Das Passwort muss mindestens 8 Zeichen lang sein."
+      });
+    }
+
+    const userId = await benutzerErstellen(
+      name,
+      email,
+      passwort,
+      "kunde"
+    );
+
+    res.status(201).json({
+      message: "Benutzer erfolgreich erstellt",
+      userId
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+      return res.status(409).json({
+        error: "Diese E-Mail-Adresse ist bereits registriert."
+      });
+    }
+
+    res.status(500).json({
+      error: "Benutzer konnte nicht erstellt werden."
+    });
+  }
+});
+
+// Benutzer anmelden
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, passwort } = req.body;
+
+    // Eingaben prüfen
+    if (!email || !passwort) {
+      return res.status(400).json({
+        error: "E-Mail und Passwort sind erforderlich."
+      });
+    }
+
+    // Benutzer anhand der E-Mail suchen
+    const benutzer = db
+      .prepare(`
+        SELECT id, name, email, passwort_hash, role
+        FROM benutzer
+        WHERE email = ?
+      `)
+      .get(email);
+
+    // Benutzer nicht gefunden
+    if (!benutzer) {
+      return res.status(401).json({
+        error: "E-Mail oder Passwort ist falsch."
+      });
+    }
+
+    // Passwort mit dem gespeicherten Hash vergleichen
+    const passwortKorrekt = await bcrypt.compare(
+      passwort,
+      benutzer.passwort_hash
+    );
+
+    // Passwort falsch
+    if (!passwortKorrekt) {
+      return res.status(401).json({
+        error: "E-Mail oder Passwort ist falsch."
+      });
+    }
+
+    // Login erfolgreich
+    res.json({
+      message: "Login erfolgreich",
+      benutzer: {
+        id: benutzer.id,
+        name: benutzer.name,
+        email: benutzer.email,
+        role: benutzer.role
+      }
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Beim Login ist ein Fehler aufgetreten."
+    });
+  }
+});
 
 // Gibt alle Autos inklusive ihrer Aufgaben zurück
 app.get("/api/autos", (req, res) => {

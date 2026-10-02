@@ -4,68 +4,55 @@ const db = new Database("werkstatt.db");
 
 console.log("Datenbank:", db.name);
 
+db.pragma("foreign_keys = ON");
 
-//erstellen der Tabellen Für Autos und deren Aufgaben
+
+// Benutzer
 db.exec(`
-    CREATE TABLE IF NOT EXISTS autos (
+  CREATE TABLE IF NOT EXISTS benutzer (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    passwort_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'kunde'
+  )
+`);
+
+// Autos
+db.exec(`
+  CREATE TABLE IF NOT EXISTS autos (
     id INTEGER PRIMARY KEY,
     marke TEXT NOT NULL,
     model TEXT NOT NULL,
-    submodel TEXTX,
+    submodel TEXT NOT NULL,
     baujahr INTEGER,
     ankunft TEXT,
-    prioritaet TEXT
-    )
-  `);
+    prioritaet TEXT,
+    kunden_id INTEGER,
+    FOREIGN KEY (kunden_id) REFERENCES benutzer(id)
+  )
+`);
 
+// Aufgaben
 db.exec(`
-    CREATE TABLE IF NOT EXISTS aufgaben (
+  CREATE TABLE IF NOT EXISTS aufgaben (
     id INTEGER PRIMARY KEY,
     auto_id INTEGER,
     beschreibung TEXT NOT NULL,
     status INTEGER DEFAULT 0,
     FOREIGN KEY (auto_id) REFERENCES autos(id)
-    )
+  )
 `);
+
+console.log(
+  db.prepare(`PRAGMA table_info(autos)`).all()
+);
 
 const aufgaben = db
   .prepare("SELECT * FROM aufgaben")
   .all();
 
 console.log("Aufgaben:", aufgaben);
-
-//Auto Hinzufügen
-const autoEinfuegen = db.prepare(`
-    INSERT INTO autos (
-    id,
-    marke,
-    model,
-    submodel,
-    baujahr,
-    ankunft,
-    prioritaet
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-`);
-
-// autoEinfuegen.run(
-//   2,
-//   "BMW",
-//   "3er",
-//   "320i",
-//   2020,
-//   "28.09.2026",
-//   "mittel"
-// );
-
-console.log(
-  db.prepare("SELECT * FROM autos").all()
-);
-
-//Aufgabe hinzufügen
-const aufgabeEinfuegen = db.prepare(
-  "INSERT INTO aufgaben VALUES (?, ?, ?, ?)"
-);
 
 //Tabellen zusammenführen
 const ergebnis = db
@@ -88,15 +75,6 @@ const ergebnis = db
   .all();
 
 console.log(ergebnis);
-
-//Auto Daten aktualisieren
-const autoAktualisieren = db.prepare(`
-    UPDATE autos
-    SET baujahr = ?
-    WHERE id = ?
-`);
-
-autoAktualisieren.run(2018, 1);
 
 //Auto Daten löschen
 const autoLoeschen = db.prepare(`
